@@ -1,0 +1,151 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>threejs-example 1-model</title>
+		<style>
+			body { 
+				margin: 0;
+				background-color: white;
+			}
+
+		</style>
+		<!--引入three.js三维引擎-->
+		<script src="../three.min.js"></script> 
+		<script src="../fflate.min.js"></script>
+		<!--引入轨道控件OrbitControls.js-->
+		<script src="../examples//js//controls/OrbitControls.js"></script>
+    <script src="../examples//js/loaders/GLTFLoader.js"></script>
+		<script src="../examples//js/loaders/RGBELoader.js"></script>
+
+
+		<!-- <script src="../three/examples/js/controls//OrbitControls.js"></script>
+		<script src="../three/examples/js/loaders/GLTFLoader.js"></script>
+		<script src="../three/build/three.js/"></script>	
+		<script src="../three/examples//js/loaders/RGBELoader.js"></script> -->
+	</head>
+	<body>
+		<script>
+
+				const scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x999999 );
+				// const camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+				const camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 500 );
+				// NOTE：camera 坐标不能全为0，否则OrbitControls异常，无法移动视觉
+				// camera.position.set(4,0,18);
+				camera.up.set( 0, 0, 1 );
+				camera.position.set( 0, - 9, 6 );
+				camera.add( new THREE.PointLight( 0xfff000, 0.3 ) );
+				scene.add( camera );
+
+				const grid = new THREE.GridHelper( 50, 50, 0xffffff, 0x555555 );
+								grid.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), 90 * ( Math.PI / 180 ) );
+								scene.add( grid );
+
+
+				const renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				let container = document.body;
+				let targetRotation = 0;
+				let targetRotationOnPointerDown = 0;
+				let pointerX = 0;
+				let pointerXOnPointerDown = 0;
+				let windowHalfX = window.innerWidth / 2;
+				container.style.touchAction = 'none';
+				container.addEventListener( 'pointerdown', onPointerDown );
+
+				// new OrbitControls( camera, renderer.domElement );
+				let disabledRate = false;
+				var controls = new THREE.OrbitControls(camera, renderer.domElement);
+				controls.addEventListener("start", () => {
+					disabledRate = true;
+				});
+				controls.addEventListener("end", () => {
+					disabledRate = false;
+				});
+
+				const light = new THREE.HemisphereLight( 0xffffff, 0xcccccc, 1 );
+				scene.add( light );
+				const alight = new THREE.AmbientLight( 0x999999 ); // soft white light
+				scene.add( alight );
+				const directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+				scene.add( directionalLight );
+
+				let obj;
+
+
+
+				const loader = new GLTFLoader();
+				loader.load( "./static/3d/b-final2.glb", function ( gltf ) {
+				console.log("load gltf file:",gltf);
+				gltf.scene.position.set(0,0,2);
+				gltf.scene.scale.set(0.05,0.05,0.05);
+				gltf.scene.rotation.set(-80,0,0);
+				obj=gltf;
+				scene.add( gltf.scene );
+				console.log("scene",scene);
+
+				animate();
+
+				} );
+
+				// const rgbeLoader = new RGBELoader()
+				// rgbeLoader.load("./static/3d/quarry_01_1k.hdr", function(texture){
+				//   scene.background = texture;
+				//   animate();
+				// })
+				// function onWindowResize() {
+
+				//   camera.aspect = window.innerWidth / window.innerHeight;
+				//   camera.updateProjectionMatrix();
+
+				//   renderer.setSize( window.innerWidth, window.innerHeight );
+
+				//   render();
+
+				// }
+
+				function onPointerDown( event ) {
+
+				if ( event.isPrimary === false ) return;
+
+				pointerXOnPointerDown = event.clientX - windowHalfX;
+				targetRotationOnPointerDown = targetRotation;
+
+				document.addEventListener( 'pointermove', onPointerMove );
+				document.addEventListener( 'pointerup', onPointerUp );
+
+				}
+
+				function onPointerMove( event ) {
+
+				if ( event.isPrimary === false ) return;
+
+				pointerX = event.clientX - windowHalfX;
+
+				targetRotation = targetRotationOnPointerDown + ( pointerX - pointerXOnPointerDown ) * 0.02;
+
+				}
+
+				function onPointerUp() {
+
+				if ( event.isPrimary === false ) return;
+
+				document.removeEventListener( 'pointermove', onPointerMove );
+				document.removeEventListener( 'pointerup', onPointerUp );
+
+				}
+
+
+				const animate = function () {
+				obj.scene.rotation.y += (targetRotation - obj.scene.rotation.y)*0.05;
+				if (!disabledRate) obj.scene.rotation.y+=0.01;
+				requestAnimationFrame( animate );
+				renderer.render( scene, camera );
+				};
+
+		</script>
+	</body>
+	<!-- <script src="./static/js/add-github-icon.js"></script> -->
+</html>
